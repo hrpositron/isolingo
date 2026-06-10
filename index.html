@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>IsoLingo by PairBot – Nuklearmedicin for uddannelseslæger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Hot-iron PET farveskala = signaturen */
+    --bg:#0b0d12;
+    --bg2:#12151d;
+    --panel:#171b25;
+    --panel2:#1d2230;
+    --line:#2a3040;
+    --ink:#eef2f8;
+    --ink-dim:#9aa6bd;
+    --hot1:#3a0d00;
+    --hot2:#c1330a;
+    --hot3:#ff7a00;
+    --hot4:#ffc400;
+    --hot5:#fff3b0;
+    --ok:#3ddc7e;
+    --ok-d:#16a34a;
+    --bad:#ff5a6e;
+    --bad-d:#c0344a;
+    --accent:#ff7a00;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #1a1207 0%, transparent 55%),
+      radial-gradient(900px 500px at -10% 110%, #0d1726 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:18px 16px 60px;}
+
+  /* ---------- Topbar ---------- */
+  .topbar{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 12px;margin-bottom:18px;
+    background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);border-radius:16px;
+  }
+  .brand{display:flex;align-items:center;gap:9px;margin-right:auto;min-width:0;font-weight:800;letter-spacing:.3px}
+  .wordmark{display:flex;flex-direction:column;line-height:1.05}
+  .wordmark .name{
+    font-family:"Space Grotesk",system-ui,sans-serif;
+    font-weight:700;font-size:21px;letter-spacing:.2px;
+    background:linear-gradient(95deg,var(--hot3),var(--hot4) 70%,var(--hot5));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .wordmark small{
+    font-family:"Space Grotesk",system-ui,sans-serif;
+    font-size:10.5px;font-weight:500;color:var(--ink-dim);
+    letter-spacing:1.2px;text-transform:uppercase;margin-top:3px;
+  }
+  .trefoil{width:30px;height:30px;flex:none}
+  .stat{display:flex;align-items:center;gap:6px;font-weight:700;font-size:15px}
+  .stat .lbl{color:var(--ink-dim);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+  .flame{font-size:18px}
+  .lives{display:flex;gap:3px}
+  .atom{width:18px;height:18px}
+  .atom.dead{opacity:.22;filter:grayscale(1)}
+
+  /* ---------- Home ---------- */
+  .hero{
+    border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:20px;
+    background:
+      linear-gradient(180deg, rgba(255,122,0,.10), transparent 60%),
+      var(--panel);
+    position:relative;overflow:hidden;
+  }
+  .hero h1{margin:0 0 6px;font-size:24px;line-height:1.15;letter-spacing:-.3px}
+  .hero p{margin:0;color:var(--ink-dim);font-size:14px}
+  .suvscale{margin-top:18px}
+  .suvscale-bar{height:12px;border-radius:99px;
+    background:linear-gradient(90deg,#000000,#5a0d00,#b3270a,#ff6a00,#ffc400,#fffbe6);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);}
+
+  .mixedbtn{
+    width:100%;margin-bottom:22px;border:none;cursor:pointer;
+    background:linear-gradient(180deg,#2a3142,#20263340);
+    border:1px solid var(--line);color:var(--ink);
+    padding:14px;border-radius:16px;font-size:15px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    transition:transform .06s ease, border-color .2s;
+  }
+  .mixedbtn:hover{border-color:var(--accent)}
+  .mixedbtn:active{transform:translateY(1px)}
+
+  .pathlabel{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--ink-dim);margin:0 4px 12px;font-weight:700}
+
+  /* Lesson path */
+  .path{position:relative;padding-left:6px}
+  .node{
+    display:flex;align-items:center;gap:14px;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:18px;padding:14px 16px;margin-bottom:14px;cursor:pointer;
+    transition:transform .07s ease, border-color .2s, box-shadow .2s;
+    position:relative;
+  }
+  .node:hover{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,0,.08)}
+  .node:active{transform:translateY(2px)}
+  .nodeicon{
+    width:48px;height:48px;flex:none;border-radius:14px;display:grid;place-items:center;font-size:24px;
+    background:radial-gradient(circle at 30% 25%, #ffffff22, transparent 60%), var(--ndcol,#333);
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.35);
+  }
+  .node h3{margin:0;font-size:16px}
+  .node .meta{font-size:12px;color:var(--ink-dim);margin-top:2px}
+  .node .prog{margin-left:auto;text-align:right;font-size:12px;color:var(--ink-dim);flex:none}
+  .ring{width:34px;height:34px}
+  .done-badge{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;
+    background:var(--ok-d);display:grid;place-items:center;font-size:13px;color:#fff;border:2px solid var(--bg)}
+
+  /* ---------- Quiz ---------- */
+  .screen{display:none}
+  .screen.active{display:block}
+  .qhead{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .close{background:none;border:none;color:var(--ink-dim);font-size:26px;cursor:pointer;line-height:1;padding:0 4px}
+  .qbar{flex:1;height:14px;background:var(--panel2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+  .qbar > div{height:100%;width:0;border-radius:99px;transition:width .3s ease;
+    background:linear-gradient(90deg,var(--hot2),var(--hot3),var(--hot4));}
+
+  .qcat{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);font-weight:800;margin-bottom:8px}
+  .question{font-size:21px;font-weight:700;line-height:1.3;margin:0 0 22px}
+  .opts{display:flex;flex-direction:column;gap:11px}
+  .opt{
+    text-align:left;border:1.5px solid var(--line);background:var(--panel);
+    color:var(--ink);padding:15px 16px;border-radius:14px;font-size:15.5px;cursor:pointer;
+    transition:border-color .12s, background .12s, transform .06s;
+    box-shadow:0 2px 0 rgba(0,0,0,.25);
+  }
+  .opt:hover{border-color:#43506b}
+  .opt:active{transform:translateY(1px)}
+  .opt.sel{border-color:var(--accent);background:#241b10}
+  .opt.correct{border-color:var(--ok);background:rgba(61,220,126,.13)}
+  .opt.wrong{border-color:var(--bad);background:rgba(255,90,110,.12)}
+  .opt[disabled]{cursor:default}
+
+  /* feedback sheet */
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;transform:translateY(110%);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    background:var(--panel2);border-top:1px solid var(--line);
+    border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+    box-shadow:0 -12px 40px rgba(0,0,0,.5);z-index:50;
+  }
+  .sheet.show{transform:translateY(0)}
+  .sheet.good{background:#0f2418}
+  .sheet.bad{background:#2a1115}
+  .sheet-wrap{max-width:560px;margin:0 auto}
+  .verdict{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;margin-bottom:8px}
+  .verdict.good{color:var(--ok)}
+  .verdict.bad{color:var(--bad)}
+  .explain{font-size:14.5px;color:#dbe3f0;margin:0 0 16px}
+  .explain b{color:#fff}
+  .cta{
+    width:100%;border:none;cursor:pointer;font-size:16px;font-weight:800;color:#06140c;
+    padding:15px;border-radius:14px;letter-spacing:.3px;
+    background:linear-gradient(180deg,var(--ok),var(--ok-d));
+    box-shadow:0 4px 0 #0c5c30;transition:transform .06s;
+  }
+  .cta.bad{color:#1a0608;background:linear-gradient(180deg,var(--bad),var(--bad-d));box-shadow:0 4px 0 #7a1322}
+  .cta:active{transform:translateY(3px);box-shadow:none}
+
+  /* ---------- Summary ---------- */
+  .summary{text-align:center;padding-top:18px}
+  .bigicon{font-size:64px;margin-bottom:6px}
+  .summary h2{margin:0 0 4px;font-size:26px}
+  .summary p{color:var(--ink-dim);margin:0 0 22px}
+  .cards{display:flex;gap:12px;margin-bottom:24px}
+  .card{flex:1;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--panel)}
+  .card .v{font-size:26px;font-weight:800}
+  .card .k{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink-dim);margin-top:2px}
+  .card.xp .v{color:var(--hot4)} .card.acc .v{color:var(--ok)} .card.streak .v{color:var(--hot3)}
+  .ghost{
+    width:100%;margin-top:11px;background:transparent;border:1.5px solid var(--line);
+    color:var(--ink);padding:14px;border-radius:14px;font-weight:700;font-size:15px;cursor:pointer
+  }
+  .ghost:hover{border-color:var(--accent)}
+  .footer{text-align:center;color:#4b5470;font-size:11px;margin-top:34px;line-height:1.8}
+  .resetlink{display:inline-block;margin-top:14px;padding:9px 18px;border-radius:99px;
+    border:1px solid var(--line);color:#8b94a8;font-size:13px;font-weight:600;
+    text-decoration:none;cursor:pointer;transition:border-color .2s,color .2s}
+  .resetlink:hover{color:var(--bad);border-color:var(--bad)}
+
+  /* ---------- Mobil ---------- */
+  @media (max-width:430px){
+    .wrap{padding:14px 12px 56px}
+    .topbar{gap:8px;padding:8px 11px}
+    .wordmark .name{font-size:18px}
+    .wordmark small{font-size:9px;letter-spacing:.8px}
+    .trefoil{width:26px;height:26px}
+    .stat{font-size:14px;gap:4px}
+    .stat .lbl{font-size:11px}
+    .atom{width:16px;height:16px}
+    .lives{gap:2px}
+    .hero{padding:18px 16px}
+    .hero h1{font-size:21px}
+    .question{font-size:19px}
+    .opt{font-size:15px;padding:14px}
+    .nodeicon{width:44px;height:44px;font-size:22px}
+    .node h3{font-size:15px}
+  }
+  @media (max-width:340px){
+    .wordmark small{display:none}
+    .stat .lbl{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand">
+      <svg class="trefoil" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="48" fill="#0b0d12" stroke="#ff7a00" stroke-width="3"/>
+        <circle cx="50" cy="50" r="9" fill="#ffc400"/>
+        <g fill="#ff7a00">
+          <path d="M50 50 L70 15 A40 40 0 0 0 30 15 Z"/>
+          <path d="M50 50 L85 72 A40 40 0 0 0 100 38 L62 50 Z" transform="rotate(120 50 50)"/>
+          <path d="M50 50 L85 72 A40 40 0 0 0 100 38 L62 50 Z" transform="rotate(240 50 50)"/>
+        </g>
+      </svg>
+      <span class="wordmark"><span class="name">IsoLingo</span><small>by PairBot</small></span>
+    </div>
+    <div class="stat"><span class="flame">🔥</span><span id="streak">0</span></div>
+    <div class="stat">
+      <div class="lives" id="lives"></div>
+    </div>
+    <div class="stat"><span class="lbl">XP</span><span id="xp">0</span></div>
+  </div>
+
+  <!-- HOME -->
+  <section id="home" class="screen active">
+    <div class="hero">
+      <h1>Lær nuklearmedicin, ét spor ad gangen</h1>
+      <p>Korte spørgsmål, straks-feedback og forklaringer – tracere, fysik, demens, onkologi, thyreoidea og strålebeskyttelse for uddannelseslæger.</p>
+      <div class="suvscale">
+        <div class="suvscale-bar"></div>
+      </div>
+    </div>
+
+    <button class="mixedbtn" onclick="startMixed()">🎲 Blandet quiz – 12 tilfældige spørgsmål</button>
+
+    <p class="pathlabel">Lektioner</p>
+    <div class="path" id="path"></div>
+
+    <div class="footer">
+      Et lille læringsværktøj – ingen erstatning for lærebøger eller lokale instrukser.<br>
+      Fremskridt gemmes lokalt i din browser.<br>
+      <a class="resetlink" onclick="resetProgress(event)">↺ Nulstil fremskridt</a>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="screen">
+    <div class="qhead">
+      <button class="close" onclick="quitQuiz()" aria-label="Luk">×</button>
+      <div class="qbar"><div id="qbarfill"></div></div>
+    </div>
+    <div class="qcat" id="qcat"></div>
+    <h2 class="question" id="qtext"></h2>
+    <div class="opts" id="opts"></div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="summary" class="screen">
+    <div class="summary">
+      <div class="bigicon" id="sumIcon">🏆</div>
+      <h2 id="sumTitle">Lektion gennemført!</h2>
+      <p id="sumSub"></p>
+      <div class="cards">
+        <div class="card xp"><div class="v" id="sumXp">0</div><div class="k">XP</div></div>
+        <div class="card acc"><div class="v" id="sumAcc">0%</div><div class="k">Korrekt</div></div>
+        <div class="card streak"><div class="v" id="sumStreak">0</div><div class="k">Bedste stime</div></div>
+      </div>
+      <button class="cta" onclick="goHome()">Fortsæt</button>
+      <button class="ghost" id="retryWrong" onclick="retryWrong()">Øv de forkerte igen</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- FEEDBACK SHEET -->
+<div class="sheet" id="sheet">
+  <div class="sheet-wrap">
+    <div class="verdict" id="verdict"></div>
+    <p class="explain" id="explain"></p>
+    <button class="cta" id="nextBtn" onclick="nextQuestion()">Fortsæt</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   SPØRGSMÅLSBANK
+   answer = indeks i options (0-baseret)
+============================================================ */
+const LESSONS = [
+  {
+    id:"fysik", title:"Isotoper & fysik", icon:"⚛️", color:"#c1330a",
+    questions:[
+      {q:"Hvad er halveringstiden for ¹⁸F?", o:["20 min","110 min","6 timer","13 timer"], a:1,
+       e:"¹⁸F har t½ ≈ <b>110 min</b> (109,8). Lang nok til regional distribution af FDG fra cyklotron, kort nok til lav stråledosis."},
+      {q:"Hvilken gammaenergi udsender ⁹⁹ᵐTc?", o:["511 keV","140 keV","364 keV","159 keV"], a:1,
+       e:"<b>140 keV</b> – næsten ideelt for NaI-gammakameraet. 511 keV er annihilationsfotoner (PET), 364 keV er ¹³¹I."},
+      {q:"Hvilken proces giver de 511 keV-fotoner, PET detekterer?", o:["Isomer overgang","Positron-annihilation","Elektronindfangning","Intern konversion"], a:1,
+       e:"Positronen (β⁺) annihileres med en elektron → <b>to 511 keV-fotoner udsendt 180° fra hinanden</b>, detekteret i koincidens."},
+      {q:"I en ⁹⁹Mo/⁹⁹ᵐTc-generator er modersisotopen…", o:["¹⁸F","⁹⁹Mo","⁶⁸Ge","¹³¹I"], a:1,
+       e:"<b>⁹⁹Mo (t½ 66 t)</b> henfalder til ⁹⁹ᵐTc, som elueres dagligt – derfor 'molybdæn-ko'."},
+      {q:"Hvilken isotop har den korteste halveringstid?", o:["¹¹C (20 min)","¹⁵O (2 min)","¹³N (10 min)","¹⁸F (110 min)"], a:1,
+       e:"<b>¹⁵O ≈ 2 min</b>. Bruges til kvantitativ blodgennemstrømning (fx ¹⁵O-H₂O) og kræver cyklotron på stedet."},
+      {q:"²²³Ra (Xofigo) henfalder ved udsendelse af…", o:["Beta-partikler","Alfa-partikler","Positroner","Gamma alene"], a:1,
+       e:"<b>Alfa-emitter</b> – kort rækkevidde (få celledimensioner), høj LET. Knogletropt 'calcium-mimetikum' ved ossøse metastaser."},
+      {q:"⁹⁰Y er karakteriseret ved at være…", o:["Ren betaemitter","Ren gammaemitter","Alfaemitter","Positronemitter"], a:0,
+       e:"<b>Ren β⁻-emitter</b> uden primær gamma → svær at afbilde direkte; vurderes via bremsestråling eller den lille interne β⁺-fraktion (PET)."},
+      {q:"Hvad er halveringstiden for ¹³¹I?", o:["13 timer","8 dage","6 timer","60 dage"], a:1,
+       e:"<b>8 dage</b>. Beta giver terapieffekt (thyreoidea), 364 keV-gamma muliggør scintigrafi – et klassisk theranostisk isotop."},
+      {q:"²⁰¹Tl og ⁶⁸Ga adskiller sig fra ⁹⁹ᵐTc ved at…", o:["⁶⁸Ga er en PET-isotop","Begge er alfaemittere","Begge har t½ > 1 uge","De udsendes kun fra reaktor"], a:0,
+       e:"<b>⁶⁸Ga (t½ 68 min) er en positronemitter</b> (PET), elueret fra ⁶⁸Ge/⁶⁸Ga-generator. ²⁰¹Tl er en SPECT-isotop (elektronindfangning)."},
+    ]
+  },
+  {
+    id:"farma", title:"Radiofarmaka", icon:"💉", color:"#d8480c",
+    questions:[
+      {q:"Hvordan ophobes FDG i cellen?", o:["Bindes til DNA","Fanges som FDG-6-fosfat efter hexokinase","Binder somatostatinreceptor","Indlejres i knoglematrix"], a:1,
+       e:"FDG optages via glukosetransportører og fosforyleres af hexokinase til <b>FDG-6-fosfat</b>, der ikke metaboliseres videre → 'metabolic trapping'."},
+      {q:"¹⁸F-FET er en…", o:["Glukoseanalog","Aminosyre-tracer","Knogletracer","Receptorligand for SSTR"], a:1,
+       e:"<b>Aminosyre-PET</b> (fluoroethyl-tyrosin) til gliomer – optages via LAT-transportere, mindre påvirket af inflammation end FDG."},
+      {q:"¹²³I-FP-CIT (DaTSCAN) afbilder…", o:["Postsynaptiske D2-receptorer","Den præsynaptiske dopamintransporter (DAT)","Amyloid","Mikroglia"], a:1,
+       e:"Binder <b>DAT på de præsynaptiske nigrostriatale terminaler</b> → mål for præsynaptisk dopaminerg degeneration."},
+      {q:"⁶⁸Ga-DOTATOC binder primært til…", o:["Glukosetransportør","Somatostatinreceptor (SSTR2)","PSMA","Noradrenalintransportør"], a:1,
+       e:"<b>SSTR2</b> – overudtrykt på neuroendokrine tumorer. Grundlag for theranostik med ¹⁷⁷Lu-DOTATATE."},
+      {q:"¹²³I-MIBG er en strukturel analog til…", o:["Glukose","Noradrenalin","Serotonin","Dopamin"], a:1,
+       e:"<b>Noradrenalin-analog</b> – optages i sympatiske nerveender. Bruges til fæokromocytom/neuroblastom og kardiel sympatisk innervation."},
+      {q:"Hvilket farmakon bruges til knoglescintigrafi?", o:["⁹⁹ᵐTc-MAA","⁹⁹ᵐTc-MDP/HDP","⁹⁹ᵐTc-MAG3","⁹⁹ᵐTc-sestamibi"], a:1,
+       e:"<b>⁹⁹ᵐTc-MDP/HDP</b> (difosfonater) adsorberes til hydroxyapatit i områder med osteoblastaktivitet."},
+      {q:"⁹⁹ᵐTc-MAA injiceres i.v. for at vurdere…", o:["Lungeventilation","Lungeperfusion","Nyrefunktion","Galdeveje"], a:1,
+       e:"Makroaggregeret albumin embolerer mikrokredsløbet i lungerne → <b>perfusionsbillede</b> (V/Q-scanning og lungeshunt før SIRT)."},
+      {q:"Hvilke tracere bruges til amyloid-PET?", o:["MK-6240, PI-2620","Florbetapir, florbetaben, flutemetamol","FET, FDOPA","MDP, HDP"], a:1,
+       e:"<b>¹⁸F-florbetapir/-betaben/-flutemetamol</b> binder fibrillært β-amyloid. (MK-6240/PI-2620 er derimod tau-tracere.)"},
+      {q:"¹⁷⁷Lu-DOTATATE anvendes til…", o:["Behandling af NET (PRRT)","Demensdiagnostik","Lungeperfusion","Knoglescintigrafi"], a:0,
+       e:"<b>Peptidreceptor-radionuklidterapi</b> ved SSTR-positive neuroendokrine tumorer. β⁻-stråling leverer dosis lokalt; ledsages af gamma til dosimetri."},
+    ]
+  },
+  {
+    id:"hjerne", title:"Demens", icon:"🧠", color:"#ff7a00",
+    questions:[
+      {q:"Klassisk FDG-mønster ved Alzheimers sygdom?", o:["Frontal hypometabolisme","Bilateral temporoparietal + posterior cingulum/precuneus","Occipital hypometabolisme","Striatal hypometabolisme"], a:1,
+       e:"<b>Temporoparietalt + posterior cingulum/precuneus</b>, ofte med relativ sparing af sensorimotorisk og occipital cortex."},
+      {q:"FDG-mønster ved adfærdsvariant frontotemporal demens (bvFTD)?", o:["Occipitalt","Frontalt + anteriort temporalt","Cerebellart","Bilateralt parietalt"], a:1,
+       e:"<b>Frontal og anterior temporal hypometabolisme</b>, ofte asymmetrisk – modsvarer den kliniske adfærds-/sprogforstyrrelse."},
+      {q:"'Cingulate island sign' på FDG-PET peger mod…", o:["Alzheimer","Lewy body-demens (DLB)","Vaskulær demens","Normaltrykshydrocephalus"], a:1,
+       e:"<b>DLB</b>: relativt bevaret posteriort cingulum trods reduceret precuneus/cuneus – sammen med occipital hypometabolisme."},
+      {q:"Occipital hypometabolisme hjælper med at skelne…", o:["DLB fra Alzheimer","FTD fra vaskulær","PSP fra MSA","AD fra normaltryk"], a:0,
+       e:"Occipital affektion taler for <b>DLB frem for AD</b>, hvor occipital metabolisme typisk er bevaret."},
+      {q:"Tidlig caudatus/striatal hypometabolisme ses ved…", o:["Huntingtons sygdom","Alzheimer","DLB","FTD"], a:0,
+       e:"<b>Huntington</b> rammer striatum (især caudatus) tidligt – kan ses før udtalt atrofi."},
+      {q:"Hvorfor er lav blodglukose ønskelig før FDG-hjerne-PET?", o:["Det øger stråledosis","Høj glukose konkurrerer med FDG om optag","Det forkorter scantiden","Det forhindrer bevægelse"], a:1,
+       e:"Endogen glukose <b>konkurrerer kompetitivt</b> med FDG → hyperglykæmi sænker og forvansker det cerebrale signal. Faste anbefales."},
+      {q:"En negativ amyloid-PET har især høj…", o:["Positiv prædiktiv værdi for tau","Negativ prædiktiv værdi for Alzheimer-patologi","Sensitivitet for vaskulær sygdom","Specificitet for DLB"], a:1,
+       e:"Negativ amyloid-scan gør betydende <b>Alzheimer-patologi usandsynlig</b> som årsag – stærkest til at udelukke, ikke bekræfte klinisk AD."},
+      {q:"Hvilke betragtes som 2.-generations tau-tracere?", o:["Flortaucipir alene","MK-6240 og PI-2620","Florbetaben","FDOPA"], a:1,
+       e:"<b>MK-6240 og PI-2620</b> har mindre off-target binding (fx choroid plexus, MAO) end 1.-generation flortaucipir."},
+    ]
+  },
+  {
+    id:"bevaege", title:"Bevægeforstyrrelser", icon:"🕺", color:"#ff9416",
+    questions:[
+      {q:"DAT-scanning er typisk UNORMAL (nedsat) ved…", o:["Essentiel tremor","Idiopatisk Parkinson, MSA, PSP, DLB","Medikamentelt udløst parkinsonisme","Psykogen parkinsonisme"], a:1,
+       e:"Præsynaptisk degeneration i de nigrostriatale baner → <b>nedsat DAT-optag ved iPD, MSA, PSP og DLB</b>."},
+      {q:"DAT-scanning er typisk NORMAL ved…", o:["Idiopatisk Parkinson","Essentiel tremor","Multipel systematrofi","Lewy body-demens"], a:1,
+       e:"<b>Essentiel tremor</b> (og medikamentel/vaskulær/psykogen parkinsonisme) har intakt præsynaptisk dopaminsystem → normal scan."},
+      {q:"DAT-scanning er især nyttig til at skelne DLB fra…", o:["Parkinsons sygdom","Alzheimers sygdom","MSA","PSP"], a:1,
+       e:"Unormal DAT støtter <b>DLB frem for Alzheimer</b>, hvor DAT er normal – et indikativt biomarkør-kriterium for DLB."},
+      {q:"Hvor begynder DAT-tabet typisk ved tidlig Parkinson?", o:["Caput nuclei caudati","Posteriort/dorsalt putamen, asymmetrisk","Bilateralt symmetrisk i hele striatum","Thalamus"], a:1,
+       e:"Tabet starter <b>posteriort i putamen, kontralateralt til de mest symptomgivende ekstremiteter</b> – senere caudatus."},
+      {q:"Ved kardiel ¹²³I-MIBG taler en LAV hjerte/mediastinum-ratio for…", o:["Alzheimer","DLB / Parkinson (sympatisk denervation)","Essentiel tremor","Normalt hjerte"], a:1,
+       e:"<b>DLB/PD</b> giver postganglionær sympatisk denervation → lav H/M-ratio. AD og atypisk parkinsonisme (MSA/PSP) bevarer ofte ratioen."},
+      {q:"Hvorfor varierer cutoff for H/M-ratio mellem afdelinger?", o:["Det afhænger af patientens alder","Den afhænger af kollimator (LEHR vs medium-energi)","Den er ens overalt","Den afhænger kun af tracerdosis"], a:1,
+       e:"H/M-ratio er stærkt <b>kollimatorafhængig</b> (septal gennemtrængning ved LEHR vs ME) → lokale referenceværdier. Ved OUH bruges en sen H/M-cutoff > 1,3."},
+    ]
+  },
+  {
+    id:"onko", title:"Onkologi & PET", icon:"🎯", color:"#e85a0a",
+    questions:[
+      {q:"Hvad står SUV for?", o:["Single Uptake Volume","Standardized Uptake Value","Specific Uptake Variable","Scan Uptake Value"], a:1,
+       e:"<b>Standardized Uptake Value</b> = aktivitetskoncentration / (injiceret dosis / kropsvægt). Semikvantitativt mål for optag."},
+      {q:"Hvad kan give FALSK forhøjet FDG-optag?", o:["Hyperglykæmi","Inflammation, infektion, brunt fedt, muskelaktivitet","Faste","God hydrering"], a:1,
+       e:"FDG er ikke tumorspecifik – <b>inflammation/infektion, brunt fedt og muskelarbejde</b> giver fysiologisk/benignt optag (faldgruber)."},
+      {q:"På Deauville-skalaen svarer score 3 til…", o:["Intet optag","Optag ≤ mediastinum","Optag > mediastinum men ≤ lever","Optag markant > lever"], a:2,
+       e:"<b>Score 3 = > mediastinum, ≤ lever.</b> 1–2 negativt, 4 = moderat > lever, 5 = markant > lever eller nye læsioner."},
+      {q:"Ved TMTV-segmentering med fast tærskel (Barrington/Meignan) bruges ofte…", o:["SUV ≥ 2,5","SUV ≥ 4,0","41 % af SUVmax","Manuel kontur alene"], a:1,
+       e:"<b>SUV ≥ 4,0</b> som fast absolut tærskel er en reproducerbar metode til total metabolisk tumorvolumen ved fx DLBCL."},
+      {q:"Hvad sker der med tumoroptaget ved hyperglykæmi?", o:["Det stiger","Det falder (kompetitiv hæmning)","Uændret","Bliver mere specifikt"], a:1,
+       e:"Forhøjet plasmaglukose <b>konkurrerer med FDG</b> og sænker tumoroptaget → falsk lav SUV. Tjek blodglukose før scanning."},
+      {q:"FET-PET ved gliom vurderes bl.a. ud fra…", o:["Hounsfield-enheder","Tumor-to-brain ratio (TBR) og tids-aktivitetskurver","Deauville-score","H/M-ratio"], a:1,
+       e:"<b>TBR + dynamiske tids-aktivitetskurver</b> hjælper med gradering, biopsiplanlægning og recidiv vs strålenekrose."},
+      {q:"Hvordan reducerer man forstyrrende brunt fedt-optag på FDG-PET?", o:["Køl patienten ned","Hold patienten varm, evt. betablokker/benzodiazepin","Øg tracerdosis","Lad patienten motionere før"], a:1,
+       e:"Brunt fedt aktiveres af kulde og sympatisk tonus → <b>varme omgivelser</b> (og evt. premedicin) mindsker optaget."},
+    ]
+  },
+  {
+    id:"kardio", title:"Kardiologi", icon:"❤️", color:"#cf2d2d",
+    questions:[
+      {q:"Hvilke tracere bruges til myokardieperfusions-SPECT?", o:["⁹⁹ᵐTc-MDP","⁹⁹ᵐTc-sestamibi/tetrofosmin og ²⁰¹Tl","¹⁸F-FET","⁶⁸Ga-DOTATOC"], a:1,
+       e:"<b>⁹⁹ᵐTc-sestamibi/tetrofosmin</b> eller <b>²⁰¹Tl</b> optages proportionalt med myokardiel perfusion."},
+      {q:"En defekt der normaliseres fra stress til hvile er udtryk for…", o:["Infarkt/ar","Iskæmi (reversibel)","Artefakt","Hibernerende myokardium uden iskæmi"], a:1,
+       e:"<b>Reversibel defekt = iskæmi</b>. En fikseret (fast) defekt på både stress og hvile taler for ar/infarkt."},
+      {q:"¹⁵O-H₂O-PET bruges primært til…", o:["Vurdering af klapper","Kvantitativ myokardieblodgennemstrømning og flowreserve","Infektion","Amyloidose"], a:1,
+       e:"Frit diffusibelt vand giver <b>kvantitativ MBF (ml/g/min) og flowreserve</b> – guldstandard for absolut perfusion."},
+      {q:"Hvad er den omtrentlige halveringstid for ⁸²Rb?", o:["76 sekunder","2 minutter","20 minutter","68 minutter"], a:0,
+       e:"<b>~76 sek</b>. Genereres fra ⁸²Sr/⁸²Rb-generator → PET-perfusion uden cyklotron, men kræver hurtig protokol."},
+      {q:"Ved kardiel MIBG vurderes primært…", o:["Klapfunktion","Hjerte/mediastinum-ratio og washout (sympatisk innervation)","Perfusion","Koronaranatomi"], a:1,
+       e:"<b>H/M-ratio og washout-rate</b> afspejler myokardiel sympatisk innervation – nedsat ved fx DLB/PD og ved hjertesvigt (prognostisk)."},
+    ]
+  },
+  {
+    id:"straale", title:"Strålebeskyttelse", icon:"☢️", color:"#b8870a",
+    questions:[
+      {q:"Hvad betyder ALARA?", o:["Always Lower All Radiation Activity","As Low As Reasonably Achievable","Average Local Absorbed Radiation Amount","Active Limit And Risk Assessment"], a:1,
+       e:"<b>As Low As Reasonably Achievable</b> – princippet om at minimere dosis under hensyn til diagnostisk udbytte."},
+      {q:"De tre grundprincipper for ekstern strålebeskyttelse er…", o:["Tid, afstand, afskærmning","Dosis, alder, køn","Tracer, kollimator, scanner","Faste, hydrering, hvile"], a:0,
+       e:"<b>Tid</b> (kortere eksponering), <b>afstand</b> (1/r²) og <b>afskærmning</b> – grundpillerne ved fx håndtering af patienter efter injektion."},
+      {q:"Hvad gælder typisk for amning efter en ¹⁸F-FDG-PET?", o:["Amning skal stoppes i 3 uger","Amning behøver sjældent afbrydes, men tæt kontakt begrænses nogle timer","Mælken skal kasseres i 24 timer","Ingen forholdsregler overhovedet"], a:1,
+       e:"FDG udskilles ikke væsentligt i mælk → <b>afbrydelse er sjældent nødvendig</b>, men den eksterne stråling fra moderen gør, at tæt/langvarig kontakt med spædbarnet begrænses i nogle timer."},
+      {q:"Hvilken undersøgelse/behandling er kontraindiceret ved graviditet pga. fosterets thyreoidea?", o:["FDG-PET","¹³¹I-behandling","Knoglescintigrafi","Lungeperfusion"], a:1,
+       e:"<b>¹³¹I</b> krydser placenta og koncentreres i fosterets thyreoidea (fra ~uge 10–12). Graviditet skal udelukkes før radiojodbehandling."},
+      {q:"Efter ¹³¹I-behandling udskilles aktiviteten især via…", o:["Udånding","Urin, spyt og sved","Galde","Hår"], a:1,
+       e:"<b>Urin, spyt og sved</b> → hygiejne- og isolationsforholdsregler for at beskytte omgivelser (især børn og gravide)."},
+    ]
+  },
+  {
+    id:"klinik", title:"Indikationer & Vælg Klogt", icon:"🩺", color:"#a85c12",
+    questions:[
+      {q:"Hvornår bør FDG-hjerne-PET i demensudredning anvendes?", o:["Rutinemæssigt hos alle med hukommelsesklager","Målrettet ved diagnostisk usikkerhed","Som screening i almen praksis","Aldrig"], a:1,
+       e:"<b>Ved diagnostisk usikkerhed</b> (fx atypisk præsentation, ung debut, differentialdiagnostik AD/FTD/DLB) – ikke som rutine (Vælg Klogt)."},
+      {q:"DaTSCAN er især indiceret ved…", o:["Klassisk, sikker idiopatisk Parkinson","Usikkert parkinsonsyndrom eller DLB vs Alzheimer","Migræne","Epilepsiudredning"], a:1,
+       e:"Bidrager ved <b>diagnostisk tvivl</b> om præsynaptisk dopaminsvigt – ikke nødvendig når den kliniske diagnose allerede er sikker."},
+      {q:"En typisk indikation for ¹⁸F-FET-PET er…", o:["Knoglemetastaser","Gliomgradering, biopsiplanlægning og recidiv vs strålenekrose","Lungeemboli","Thyreoideaknuder"], a:1,
+       e:"Aminosyre-PET tilføjer metabolisk information ved <b>hjernetumorer</b>, hvor MR og FDG kan være utilstrækkelige."},
+      {q:"Hvorfor laves ⁶⁸Ga-DOTATOC-PET før ¹⁷⁷Lu-PRRT?", o:["For at måle nyrefunktion","For at bekræfte somatostatinreceptor-ekspression (theranostik)","For at udelukke graviditet","For at vælge kollimator"], a:1,
+       e:"<b>Theranostisk par</b>: diagnostisk ⁶⁸Ga-scan bekræfter SSTR-positivt mål, før terapi med ¹⁷⁷Lu rettes mod samme receptor."},
+      {q:"Ved mistanke om myelomatose er knoglescintigrafi…", o:["Førstevalg","Ofte utilstrækkelig (lytiske læsioner) – FDG-PET/CT eller MR foretrækkes","Bedre end CT i alle tilfælde","Kontraindiceret"], a:1,
+       e:"Myelomatose giver <b>rent lytiske læsioner med lav osteoblastaktivitet</b> → falsk negativ knoglescintigrafi; FDG-PET/CT eller helkrops-MR er bedre."},
+    ]
+  },
+  {
+    id:"thyreoidea", title:"Thyreoidea & radiojod", icon:"🦋", color:"#9a6b0e",
+    questions:[
+      {q:"Hvad er forskellen på ⁹⁹ᵐTc-pertechnetat og ¹²³I ved thyreoideaskintigrafi?", o:["Ingen – de er ækvivalente","Pertechnetat trappes men organificeres ikke; ¹²³I både trappes og organificeres","Pertechnetat organificeres, ¹²³I gør ikke","Begge er rene betaemittere"], a:1,
+       e:"Pertechnetat følger kun <b>trapping</b> via natrium-jod-symporteren; ¹²³I <b>trappes og organificeres</b>. Derfor kan diskordante knuder forekomme (pertechnetat-varm, jod-kold)."},
+      {q:"En 'kold' knude på thyreoideaskintigrafi betyder…", o:["Lav malignitetsrisiko","Nedsat optag – kan ikke udelukke malignitet, ofte FNA","Autonomt hyperfungerende","Altid en cyste"], a:1,
+       e:"<b>Kold = nedsat optag.</b> De fleste er benigne, men malignitet kan ikke udelukkes → finnålsbiopsi (FNA) vurderes."},
+      {q:"En autonomt hyperfungerende ('varm') knude…", o:["Har høj malignitetsrisiko","Optager kraftigt og supprimerer resten af kirtlen; lav malignitetsrisiko","Skal altid opereres","Ses kun ved cancer"], a:1,
+       e:"Et <b>toksisk adenom</b> optager kraftigt og supprimerer det øvrige væv (TSH lav). Malignitet er sjælden i varme knuder."},
+      {q:"Hvad blokerer radiojodoptag i uger til måneder?", o:["Faste","Jodholdig CT-kontrast","Levothyroxin-pause","Lav-jod-diæt"], a:1,
+       e:"<b>Jodholdig kontrast</b> mætter jodpuljen og blokerer optaget længe → undgå før RAIU-test og radiojodbehandling."},
+      {q:"Hvorfor foretrækkes ¹²³I frem for ¹³¹I til diagnostisk thyreoideaskintigrafi?", o:["¹³¹I findes ikke længere","¹²³I: ren gamma (159 keV), kort t½, lav stråledosis","¹²³I er billigere at lave","¹³¹I kan ikke afbildes"], a:1,
+       e:"<b>¹²³I (t½ ~13 t, 159 keV gamma)</b> giver lav dosis og fine billeder. ¹³¹I's beta og lange t½ giver høj dosis → reserveres til terapi og helkrops-scanning."},
+      {q:"Før radiojod-ablation ved differentieret thyreoideacancer ønskes…", o:["Lav TSH og høj jodindtagelse","Høj TSH (levothyroxin-pause eller rhTSH) + lav-jod-diæt","Steroidbehandling","Høj T3"], a:1,
+       e:"<b>Høj TSH</b> stimulerer jodoptag i restvæv/metastaser, og <b>lav-jod-diæt</b> reducerer 'kold' jodkonkurrence → bedre ablationseffekt."},
+      {q:"Hvilken tumormarkør følges ved differentieret thyreoideacancer efter total thyreoidektomi + ablation?", o:["CEA","Thyreoglobulin","Calcitonin","PSA"], a:1,
+       e:"<b>Thyreoglobulin</b> bør være umåleligt efter komplet ablation; stigning tyder på recidiv. (Calcitonin bruges derimod ved medullær cancer.)"},
+    ]
+  },
+  {
+    id:"infektion", title:"Infektion & inflammation", icon:"🔥", color:"#cf3a14",
+    questions:[
+      {q:"Hvorfor optager infektion og inflammation FDG?", o:["Bakterier metaboliserer FDG direkte","Aktiverede leukocytter og makrofager har høj glukoseomsætning","FDG binder til pus","Det skyldes ødem alene"], a:1,
+       e:"<b>Aktiverede inflammatoriske celler</b> (neutrofiler, makrofager) opregulerer glukosetransport → FDG-optag. Derfor er FDG sensitivt, men ikke specifikt."},
+      {q:"Klassisk FDG-fund ved storkarsvaskulitis (fx kæmpecellearteritis)?", o:["Fokalt optag i én nyre","Diffust forhøjet optag i karvæggen (aorta og store grene)","Intet optag","Optag kun i milten"], a:1,
+       e:"<b>Lineært/diffust væg-optag</b> i aorta og dens hovedgrene støtter storkarsvaskulitis (GCA/Takayasu)."},
+      {q:"Hvad nedsætter FDG-PET's sensitivitet ved vaskulitis?", o:["Faste","Glukokortikoidbehandling","God hydrering","Ung alder"], a:1,
+       e:"<b>Steroider dæmper inflammationen</b> → scan helst før eller meget tidligt i behandlingen for ikke at undervurdere aktiviteten."},
+      {q:"Hvilken metode bruges til mærkede hvide blodlegemer ('leukocytscintigrafi')?", o:["⁹⁹ᵐTc-MDP","⁹⁹ᵐTc-HMPAO- eller ¹¹¹In-mærkede autologe leukocytter","⁶⁸Ga-DOTATOC","¹⁸F-FET"], a:1,
+       e:"Patientens egne leukocytter mærkes med <b>⁹⁹ᵐTc-HMPAO eller ¹¹¹In-oxin</b> og reinjiceres – høj specificitet for fx ledproteseinfektion."},
+      {q:"Ved mistanke om kardiel sarkoidose kræver FDG-PET særlig forberedelse for at…", o:["Øge tracerdosis","Supprimere fysiologisk myokardiel glukoseoptag (fedtrig/kulhydratfattig diæt + forlænget faste)","Sænke blodtrykket","Forhindre bevægelse"], a:1,
+       e:"Normalt myokardium kan optage FDG fysiologisk. <b>Diæt + faste skifter substrat til frie fedtsyrer</b>, så patologisk (granulomatøst) optag ikke maskeres."},
+      {q:"FDG-PET hjælper med at skelne spondylodiskitis fra…", o:["Knoglemetastaser","Degenerative/Modic-forandringer","Frakturer","Osteoporose"], a:1,
+       e:"Mønster og intensitet af optag adskiller <b>infektiøs spondylodiskitis</b> fra degenerative endeplade-forandringer."},
+      {q:"⁶⁷Ga-citrat blev historisk brugt til infektion og sarkoidose, men er i dag stort set erstattet af…", o:["⁹⁹ᵐTc-MAA","FDG-PET/CT","¹²³I-MIBG","Knoglescintigrafi"], a:1,
+       e:"<b>FDG-PET/CT</b> har bedre opløsning, hurtigere protokol og lavere dosis end ⁶⁷Ga ved de fleste infektions-/inflammationsspørgsmål."},
+    ]
+  },
+];
+
+/* ============================================================
+   STATE
+============================================================ */
+const KEY = "nukmed_progress_v1";
+let store = loadStore();
+let current = null;       // {lessonId|null, queue:[...], idx, total, correct, bestStreak, curStreak, wrong:[], lives}
+let selectedIdx = null;
+let answered = false;
+
+function loadStore(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return {xp:0, streak:0, lastDay:null, completed:{}};
+}
+function saveStore(){ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} }
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function bumpDailyStreak(){
+  const t = todayStr();
+  if(store.lastDay === t) return;
+  const y = new Date(Date.now()-864e5).toISOString().slice(0,10);
+  store.streak = (store.lastDay === y) ? (store.streak||0)+1 : 1;
+  store.lastDay = t;
+  saveStore();
+}
+
+/* ============================================================
+   RENDER HOME
+============================================================ */
+function renderTop(){
+  document.getElementById("xp").textContent = store.xp||0;
+  document.getElementById("streak").textContent = store.streak||0;
+  const livesEl = document.getElementById("lives");
+  const lives = current ? current.lives : 3;
+  const atom = (dead)=>`<svg class="atom ${dead?'dead':''}" viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#ff7a00" stroke-width="6"/><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#ff7a00" stroke-width="6" transform="rotate(60 50 50)"/><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#ff7a00" stroke-width="6" transform="rotate(120 50 50)"/><circle cx="50" cy="50" r="10" fill="#ffc400"/></svg>`;
+  livesEl.innerHTML = [0,1,2].map(i=>atom(i>=lives)).join("");
+}
+
+function ringSvg(pct,col){
+  const r=14, c=2*Math.PI*r, off=c*(1-pct/100);
+  return `<svg class="ring" viewBox="0 0 34 34"><circle cx="17" cy="17" r="${r}" fill="none" stroke="#2a3040" stroke-width="4"/><circle cx="17" cy="17" r="${r}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 17 17)"/></svg>`;
+}
+
+function renderHome(){
+  const path = document.getElementById("path");
+  path.innerHTML = LESSONS.map(L=>{
+    const done = store.completed[L.id];
+    const best = done ? Math.round(done.bestPct) : 0;
+    const meta = done ? `Bedste: ${best}% korrekt` : `${L.questions.length} spørgsmål`;
+    const right = done ? ringSvg(best, L.color) : `<span>${L.questions.length} →</span>`;
+    return `<div class="node" onclick="startLesson('${L.id}')">
+      <div class="nodeicon" style="--ndcol:${L.color}">${L.icon}${done?'<span class="done-badge">✓</span>':''}</div>
+      <div><h3>${L.title}</h3><div class="meta">${meta}</div></div>
+      <div class="prog">${right}</div>
+    </div>`;
+  }).join("");
+  renderTop();
+}
+
+/* ============================================================
+   QUIZ FLOW
+============================================================ */
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function startLesson(id){
+  const L = LESSONS.find(x=>x.id===id);
+  beginQuiz(shuffle(L.questions).map(q=>({...q,_cat:L.title})), id);
+}
+function startMixed(){
+  let pool=[];
+  LESSONS.forEach(L=>L.questions.forEach(q=>pool.push({...q,_cat:L.title})));
+  beginQuiz(shuffle(pool).slice(0,12), null);
+}
+function beginQuiz(queue, lessonId){
+  current = {lessonId, queue, idx:0, total:queue.length, correct:0, curStreak:0, bestStreak:0, wrong:[], lives:3};
+  showScreen("quiz");
+  renderTop();
+  renderQuestion();
+}
+
+function renderQuestion(){
+  answered=false; selectedIdx=null;
+  const q = current.queue[current.idx];
+  document.getElementById("qcat").textContent = q._cat || "";
+  document.getElementById("qtext").textContent = q.q;
+  const pct = (current.idx/current.total)*100;
+  document.getElementById("qbarfill").style.width = pct+"%";
+  // shuffle options but keep track of correct
+  const opts = q.o.map((text,i)=>({text,correct:i===q.a}));
+  q._shuf = shuffle(opts);
+  const wrap = document.getElementById("opts");
+  wrap.innerHTML = q._shuf.map((o,i)=>`<button class="opt" data-i="${i}" onclick="pick(${i})">${o.text}</button>`).join("");
+}
+
+function pick(i){
+  if(answered) return;
+  selectedIdx=i;
+  document.querySelectorAll(".opt").forEach((b,idx)=>b.classList.toggle("sel", idx===i));
+  reveal();
+}
+
+function reveal(){
+  if(answered || selectedIdx===null) return;
+  answered=true;
+  const q = current.queue[current.idx];
+  const chosen = q._shuf[selectedIdx];
+  const isCorrect = chosen.correct;
+  document.querySelectorAll(".opt").forEach((b,idx)=>{
+    b.disabled=true;
+    if(q._shuf[idx].correct) b.classList.add("correct");
+    else if(idx===selectedIdx) b.classList.add("wrong");
+  });
+  if(isCorrect){
+    current.correct++; current.curStreak++; store.xp=(store.xp||0)+10;
+    current.bestStreak=Math.max(current.bestStreak,current.curStreak);
+  }else{
+    current.curStreak=0; current.lives=Math.max(0,current.lives-1);
+    current.wrong.push(q);
+  }
+  saveStore(); renderTop();
+  showSheet(isCorrect, q.e);
+}
+
+function showSheet(good, explainHtml){
+  const sheet=document.getElementById("sheet");
+  const v=document.getElementById("verdict");
+  sheet.className="sheet show "+(good?"good":"bad");
+  v.className="verdict "+(good?"good":"bad");
+  v.innerHTML = good ? "✓ Rigtigt! <span style='color:#9fe7be;font-weight:600'>+10 XP</span>" : "✗ Ikke helt";
+  document.getElementById("explain").innerHTML = explainHtml;
+  const btn=document.getElementById("nextBtn");
+  btn.className="cta"+(good?"":" bad");
+  btn.textContent = (current.idx>=current.total-1) ? "Se resultat" : "Fortsæt";
+}
+
+function nextQuestion(){
+  document.getElementById("sheet").className="sheet";
+  current.idx++;
+  if(current.idx>=current.total){ finishQuiz(); return; }
+  renderQuestion();
+}
+
+function finishQuiz(){
+  document.getElementById("qbarfill").style.width="100%";
+  bumpDailyStreak();
+  const pct = Math.round((current.correct/current.total)*100);
+  if(current.lessonId){
+    const prev = store.completed[current.lessonId];
+    store.completed[current.lessonId] = {bestPct: Math.max(pct, prev?prev.bestPct:0)};
+  }
+  saveStore();
+  // summary
+  document.getElementById("sumXp").textContent = current.correct*10;
+  document.getElementById("sumAcc").textContent = pct+"%";
+  document.getElementById("sumStreak").textContent = current.bestStreak;
+  let icon="🏆", title="Lektion gennemført!", sub="Flot arbejde.";
+  if(pct===100){icon="🌟";title="Perfekt!";sub="Alle rigtige – stærkt.";}
+  else if(pct>=70){icon="🎯";title="Godt klaret!";sub="Solid score – kig de forkerte igennem.";}
+  else {icon="📚";title="God øvelse";sub="Repetition rykker – tag den gerne igen.";}
+  document.getElementById("sumIcon").textContent=icon;
+  document.getElementById("sumTitle").textContent=title;
+  document.getElementById("sumSub").textContent=sub;
+  document.getElementById("retryWrong").style.display = current.wrong.length? "block":"none";
+  renderTop();
+  showScreen("summary");
+}
+
+function retryWrong(){
+  const w = current.wrong.slice();
+  beginQuiz(shuffle(w), current.lessonId);
+}
+
+function quitQuiz(){ if(confirm("Afslut lektionen? Fremskridt i denne runde gemmes ikke.")) goHome(); }
+function goHome(){ current=null; renderHome(); showScreen("home"); }
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+
+function resetProgress(ev){
+  if(ev) ev.preventDefault();
+  if(!confirm("Nulstil alt fremskridt (XP, stime og lektionsresultater)? Dette kan ikke fortrydes.")) return;
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  store = {xp:0, streak:0, lastDay:null, completed:{}};
+  renderHome();
+}
+
+/* init */
+renderHome();
+</script>
+</body>
+</html>
